@@ -37,6 +37,7 @@ class Analyzer:
         self.findings: list[Finding] = []
         self.tools: list[ToolRun] = []
         self.output_truncated = False
+        self.last_returncode = 0
         for source in request.files:
             (root / source.name).write_text(source.content, encoding="utf-8")
 
@@ -75,6 +76,7 @@ class Analyzer:
                 stderr.seek(0)
                 out = stdout.read(2_000_000).decode("utf-8", errors="replace")
                 err = stderr.read(2_000_000).decode("utf-8", errors="replace")
+            self.last_returncode = process.returncode
             status = "completed" if process.returncode in accepted else "failed"
             detail = "" if status == "completed" else (err or out or f"Process exited with code {process.returncode}")[-1200:].replace(str(self.root), "<workspace>")
             self.tools.append(ToolRun(name=name, status=status, detail=detail))
@@ -190,7 +192,7 @@ class Analyzer:
             matched.add(key)
             self.add(file=match[1], line=int(match[2]), column=int(match[3]), severity=match[4],
                      rule=match[5], tool="Roslyn / .NET 8", message=match[6], help=HELP["compiler"])
-        if not matched and ("error " in output[0] or "error " in output[1]):
+        if not matched and (self.last_returncode != 0 or "error " in output[0] or "error " in output[1]):
             self.tools[-1] = ToolRun(name="Roslyn / .NET 8", status="failed", detail=(output[0] or output[1])[-1200:].replace(str(self.root), "<workspace>"))
 
 

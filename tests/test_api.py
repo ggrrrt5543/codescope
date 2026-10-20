@@ -78,4 +78,4 @@ def test_native_type_errors_survive_worker_limits(language, name, source, binary
         pytest.skip(f"{binary} is not installed")
     response = client.post("/api/analyze", json={"language": language, "files": [{"name": name, "content": source}]})
     assert response.status_code == 200
-    assert response.json()["summary"]["error"] >= 1, response.json()
+    assert response.json()["summary"]["error"] >= 1, str(response.json()["tools"])
