@@ -5,9 +5,9 @@
 
 <p align="center">
   <a href="https://github.com/ggrrrt5543/codescope/actions/workflows/ci.yml"><img src="https://github.com/ggrrrt5543/codescope/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/ggrrrt5543/codescope/releases/latest"><img src="https://img.shields.io/github/v/release/ggrrrt5543/codescope?color=145bc1&amp;style=flat-square" alt="Latest release"></a>
+  <a href="https://github.com/ggrrrt5543/codescope/releases/latest"><img src="https://img.shields.io/github/v/release/ggrrrt5543/codescope?color=145bc1&amp;style=flat-square" alt="Последний релиз"></a>
   <img src="https://img.shields.io/badge/Python-3.10%2B-145bc1?style=flat-square" alt="Python 3.10+">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-566572?style=flat-square" alt="MIT license"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-566572?style=flat-square" alt="Лицензия MIT"></a>
 </p>
 
 <p align="center"><a href="#быстрый-старт">Установка</a> · <a href="#что-проверяется">Возможности</a> · <a href="https://ggrrrt5543.github.io/ggrrrt5543/codescope/">Демо</a> · <a href="https://github.com/ggrrrt5543/codescope/releases/latest">Релиз</a> · <a href="SECURITY.md">Безопасность</a></p>
@@ -158,4 +158,4 @@ CI проверяет Python 3.10/3.13, реальные ошибки четыр
 - Расширение набора языков и объяснений для конкретных правил.
 - Изолированный запуск тестов — отдельный режим, не часть v1.0.0.
 
-**Maintained by [ggrrrt5543](https://github.com/ggrrrt5543).** Код CodeScope — MIT; сторонние анализаторы распространяются по собственным лицензиям. Конкретные рекомендации по исправлению всегда требуют проверки.
+**Автор и поддержка — [ggrrrt5543](https://github.com/ggrrrt5543).** Код CodeScope — MIT; сторонние анализаторы распространяются по собственным лицензиям. Конкретные рекомендации по исправлению всегда требуют проверки.

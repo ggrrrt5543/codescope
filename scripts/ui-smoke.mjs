@@ -16,6 +16,7 @@ try {
   await page.locator('#code').blur();
   await page.screenshot({path: `${output}/interface-desktop.png`, fullPage: true});
   await page.locator('#theme').click();
+  await page.waitForTimeout(180);
   await page.screenshot({path: `${output}/interface-dark.png`, fullPage: true});
   await page.setViewportSize({width: 390, height: 844});
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw new Error('Mobile overflow');

@@ -47,7 +47,7 @@ def test_semantic_type_errors_are_detected(language, name, source, tool, binary)
     if not (shutil.which(binary) or (Path(sys.executable).parent / binary).exists()):
         pytest.skip(f"{binary} is not installed")
     report = analyze(request(language, name, source))
-    assert any(finding["tool"] == tool and finding["severity"] == "error" for finding in report["findings"])
+    assert any(finding["tool"] == tool and finding["severity"] == "error" for finding in report["findings"]), report
     assert any(run["name"] == tool and run["status"] == "completed" for run in report["tools"])
 
 
