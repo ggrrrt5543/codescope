@@ -1,16 +1,16 @@
-# Contributing
+# Участие в разработке
 
-Use Python 3.10+, Node.js 20+, and optional native toolchains from README.
+Используй Python 3.10+, Node.js 20+ и дополнительные компиляторы из README.
 
 ```sh
 python -m venv .venv
-# Activate .venv
+# Активируй .venv для своей ОС
 python -m pip install -r requirements-lock.txt
 python -m pip install --no-deps -e .
 python -m pytest -q
 ruff check codescope tests
 ```
 
-Add a regression test with each bug fix. New adapters must return the common finding schema and distinguish an absent/failed tool from a clean result. Never execute user programs, accept arbitrary build files, shell commands or compiler flags.
+Каждое исправление сопровождай регрессионным тестом. Новые адаптеры должны возвращать общую структуру диагностики и отличать отсутствующий или неисправный инструмент от успешной проверки без ошибок. Не запускай программы пользователя, не принимай произвольные файлы сборки, команды оболочки или флаги компилятора.
 
-UI changes need keyboard, light/dark, desktop and 390px mobile checks. Text is primarily Russian; upstream diagnostic messages retain their original language. Do not claim a tool detects all bugs.
+Изменения интерфейса проверяй с клавиатуры, в светлой и тёмной темах, на настольной ширине и мобильной ширине 390 пикселей. Тексты интерфейса, документация и сообщения коммитов — на русском. Названия файлов, идентификаторы и команды сохраняются. Диагностика внешних компиляторов остаётся в исходном виде с русскими общими пояснениями. Не обещай обнаружение всех ошибок.

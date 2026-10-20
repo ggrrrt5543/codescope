@@ -40,7 +40,7 @@ jobs:
       - name: Проверка четырёх языков в контейнере без прав администратора
         run: |
           set +e
-          docker run --rm --network none --memory 2g --cpus 2 --pids-limit 128 --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,nosuid,nodev,size=512m --entrypoint python codescope:ci -m pytest -q -p no:cacheprovider > container-check.log 2>&1
+          docker run --rm --network none --memory 2g --cpus 2 --pids-limit 128 --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,nosuid,nodev,size=512m,mode=1777 --entrypoint python codescope:ci -m pytest -q -p no:cacheprovider > container-check.log 2>&1
           STATUS=$?
           cat container-check.log
           if [ "$STATUS" -ne 0 ]; then

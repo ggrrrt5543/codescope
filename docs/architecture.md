@@ -1,13 +1,13 @@
-# Architecture / v1.0.0
+# Архитектура / v1.0.0
 
-Browser (vanilla HTML/CSS/JS) → loopback FastAPI → bounded subprocess worker → language adapters → unified JSON → interactive findings / HTML export.
+Браузер (HTML/CSS/JS без фреймворка) → локальный FastAPI → отдельный процесс с ограничениями → адаптеры языков → единый JSON → интерактивные результаты / экспорт HTML.
 
-The browser sends one language and up to 12 UTF-8 source files. No ZIP/project imports. API validates names, extensions and size before starting a worker. Each analysis has a temporary directory, fixed argument lists and time limits. Compiler output is normalized to `file, line, column, severity, rule, tool, message, help`.
+Браузер передаёт один язык и до 12 файлов UTF-8. Импорта ZIP и проектов нет. До запуска обработки API проверяет имена, расширения и размеры файлов. Каждый анализ получает временный каталог, фиксированный список аргументов и ограничения времени. Вывод компиляторов приводится к полям `file, line, column, severity, rule, tool, message, help`.
 
-Python AST and Tree-sitter parse syntax. Ruff checks names and common mistakes, Bandit flags potential Python security risks, Pyright checks inferred/annotated types. G++ uses C++17 syntax-only checks; Cppcheck adds static findings. Javac compiles with annotation processing disabled. Roslyn compiles a generated offline .NET 8 project (library or executable target, based on top-level statements; output is never run). Dependencies from the user's projects are not restored.
+Python AST и Tree-sitter разбирают синтаксис. Ruff проверяет имена и типичные ошибки, Bandit отмечает потенциально опасные конструкции Python, Pyright проверяет выведенные и явно заданные типы. G++ проверяет синтаксис C++17 без сборки; Cppcheck дополняет статическую диагностику. Javac компилирует с отключённой обработкой аннотаций. Roslyn вызывается напрямую из .NET SDK 8 с эталонными библиотеками net8.0 и стандартными глобальными импортами. Цель — библиотека или программа в зависимости от наличия операторов верхнего уровня; результат никогда не запускается. MSBuild, NuGet и зависимости пользовательского проекта не используются.
 
-`coverage=completed` means all configured tools finished, **not** that every property of the program was checked. `partial` means at least one tool was unavailable, failed or timed out. Results are capped at 400 findings and marked truncated if necessary. Independent tools can report the same underlying bug separately.
+`coverage=completed` означает завершение всех настроенных инструментов, **а не проверку всех свойств программы**. `partial` означает, что хотя бы один инструмент отсутствует, завершился сбоем или превысил лимит времени. Максимум — 400 находок; при необходимости отчёт помечается как усечённый. Независимые инструменты могут отдельно сообщать об одной проблеме.
 
-GitHub Pages contains static demonstration fixtures for the built-in examples. It is not an API endpoint and never presents fixture reports as fresh analysis of edited code. The same assets are served in the local app.
+На GitHub Pages размещены статические демонстрационные отчёты для встроенных примеров. Это не API: готовый отчёт не выдаётся за новую проверку изменённого кода. Те же ресурсы используются локальным приложением.
 
-Design references supplied by the maintainer: frontend-slides (typographic composition and restraint; no presentation-specific 16:9 rules applied to the app), Frontend-Design-SKILLS-for-AI (technical/mono product UI, hierarchy and accessible states), beautify-github-profile (README navigation, badges and project cards). Their code/art assets were not copied into CodeScope.
+Материалы оформления предоставлены автором: frontend-slides (типографика и сдержанная композиция; ограничения слайдов 16:9 к приложению не применялись), Frontend-Design-SKILLS-for-AI (технический интерфейс, иерархия и доступные состояния), beautify-github-profile (навигация README, значки и карточки проектов). Их код и графические ресурсы в CodeScope не копировались.

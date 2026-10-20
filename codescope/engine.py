@@ -178,10 +178,25 @@ class Analyzer:
             for node in parser.parse(source.content.encode()).root_node.children
         )
         output_type = "Exe" if has_top_level else "Library"
-        project = f'<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>{output_type}</OutputType><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><EnableNETAnalyzers>false</EnableNETAnalyzers><UseSharedCompilation>false</UseSharedCompilation></PropertyGroup></Project>'
-        (self.root / "Analysis.csproj").write_text(project)
-        (self.root / "NuGet.Config").write_text('<configuration><packageSources><clear /></packageSources></configuration>')
-        output = self.run("Roslyn / .NET 8", ["dotnet", "build", "Analysis.csproj", "--nologo", "-v:q", "--disable-build-servers", "-p:RunAnalyzers=false"], accepted=(0, 1))
+        binary = shutil.which("dotnet")
+        if not binary:
+            self.tools.append(ToolRun(name="Roslyn / .NET 8", status="unavailable", detail="Не установлен .NET SDK 8"))
+            return
+        dotnet_root = Path(binary).resolve().parent
+        compilers = list((dotnet_root / "sdk").glob("8.0.*/Roslyn/bincore/csc.dll"))
+        references = list((dotnet_root / "packs" / "Microsoft.NETCore.App.Ref").glob("8.0.*/ref/net8.0"))
+        if not compilers or not references:
+            self.tools.append(ToolRun(name="Roslyn / .NET 8", status="unavailable", detail="Нужен полный .NET SDK 8 с эталонными сборками net8.0"))
+            return
+        def version_key(path):
+            return tuple(int(part) for part in re.search(r"8\.0\.(\d+)", str(path)).group(0).split("."))
+        compiler = max(compilers, key=version_key)
+        reference_folder = max(references, key=version_key)
+        response_file = self.root / "references.rsp"
+        response_file.write_text("\n".join(f'-reference:"{file}"' for file in sorted(reference_folder.glob("*.dll"))), encoding="utf-8")
+        usings = self.root / "CodeScope.GlobalUsings.g.cs"
+        usings.write_text("\n".join(f"global using {name};" for name in ["System", "System.Collections.Generic", "System.IO", "System.Linq", "System.Net.Http", "System.Threading", "System.Threading.Tasks"]), encoding="utf-8")
+        output = self.run("Roslyn / .NET 8", ["dotnet", "exec", str(compiler), "-nologo", "-noconfig", "-nostdlib+", "-utf8output", "-nullable:enable", "-langversion:12.0", "-target:" + output_type.lower(), "-out:" + str(self.root / "Analysis.dll"), "@" + str(response_file), str(usings), *[source.name for source in self.request.files]], accepted=(0, 1))
         if not output:
             return
         matched = set()

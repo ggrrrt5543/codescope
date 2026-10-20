@@ -1,14 +1,14 @@
-# Changelog
+# История изменений
 
 ## v1.0.0
 
-- Local web editor with Python, C++, C# and Java adapters.
-- Syntax checks available for all four languages after Python package installation.
-- Python: Ruff, Bandit and Pyright. C++: G++ and Cppcheck. C#: .NET 8 / Roslyn. Java: javac.
-- Explicit completed/unavailable/failed/timeout tool statuses; partial coverage never masquerades as full success.
-- File tabs, diagnostic line markers, severity filters, keyboard shortcut and light/dark themes.
-- JSON/HTML export, without full source files.
-- Loopback API, source/request limits, temporary workspaces and worker timeouts.
-- Full-toolchain Dockerfile, cross-version CI, release ZIP and documented GitHub Pages demo.
+- Локальный веб-редактор с адаптерами Python, C++, C# и Java.
+- Синтаксический разбор четырёх языков после установки Python-пакета.
+- Python: Ruff, Bandit и Pyright. C++: G++ и Cppcheck. C#: .NET 8 / Roslyn. Java: javac.
+- Явные статусы инструментов: выполнен / не установлен / сбой / лимит времени. Частичная проверка не выдаётся за полный успех.
+- Вкладки файлов, маркеры проблем по строкам, фильтры, сочетание клавиш, светлая и тёмная темы.
+- Экспорт JSON/HTML без полных исходных файлов.
+- Локальный API, ограничения размера, временные каталоги и ограничения времени обработчиков.
+- Dockerfile со всеми инструментами, проверки нескольких версий Python, ZIP-релиз и демоверсия GitHub Pages.
 
-Not included: executing programs, behavioral tests, dependency installation for uploaded projects, AI review, automatic fixes or full solution/project import.
+Не входят: запуск программ, поведенческие тесты, установка зависимостей загруженных проектов, ИИ-рецензирование, автоматическое исправление и импорт полных проектов.

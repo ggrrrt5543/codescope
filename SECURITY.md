@@ -1,28 +1,28 @@
-# Security model
+# Модель безопасности
 
-CodeScope v1.0.0 is a **local development utility, not a hardened multi-tenant sandbox**.
+CodeScope v1.0.0 — **локальный инструмент разработки, а не защищённая многопользовательская песочница**.
 
-- Source programs are not executed. Python is parsed and analyzed; C++ uses syntax-only compilation; Java and C# compilation can create temporary bytecode/assemblies, which are never run.
-- Filenames are plain ASCII basenames, extension-checked, case-insensitively unique. No archive extraction, uploaded projects, build scripts, packages or user-supplied compiler flags.
-- Java annotation processing is disabled. C# uses a generated project with no NuGet sources and no uploaded MSBuild files; third-party analyzers are disabled.
-- Requests: 12 files, 256 KB / 6000 lines each, 1 MB combined source, 1.5 MB HTTP body. Two worker slots; 18 seconds per tool, 85 seconds per request. Linux/macOS workers limit CPU and file descriptors. Temporary disk usage is not capped on the host; use a bounded container tmpfs for untrusted inputs. Process groups are terminated on timeout on POSIX. Windows does not provide equivalent process-tree isolation here.
-- App binds to loopback, accepts localhost/127.0.0.1 hosts, rejects cross-origin POST requests and does not enable CORS. It has **no authentication**. Do not expose it to the Internet or a shared LAN.
-- The UI keeps source in memory, not localStorage. Only the theme preference is stored. Reports omit full source, but diagnostic messages may quote fragments of it. Treat reports as potentially sensitive.
-- Temporary source folders are removed after analysis. Compiler/SDK caches can remain in tool-specific directories. No telemetry is added by CodeScope; external tools may have their own policies. Pyright may need a one-time Node runtime setup if Node.js is missing. Install Node.js first for predictable offline analysis.
-- Compilers/parsers are complex native programs and may have vulnerabilities. Includes can read accessible host files; generated code and diagnostics may expose environment details. **Do not analyze untrusted submissions directly on the host.**
+- Программы пользователя не запускаются. Python разбирается и анализируется; C++ проверяется без генерации исполняемого файла; компиляция Java и C# может создавать временный байткод и сборки, которые никогда не исполняются.
+- Разрешены только простые имена файлов из ASCII-символов с проверкой расширения и уникальности без учёта регистра. Нет распаковки архивов, загрузки проектов, скриптов сборки, пакетов и пользовательских флагов компилятора.
+- Обработка аннотаций Java отключена. C# проверяется прямым вызовом Roslyn из .NET SDK 8 с эталонными библиотеками net8.0. MSBuild, восстановление NuGet-пакетов и сторонние анализаторы не вызываются. Создаются только список системных ссылок и стандартные глобальные импорты.
+- Ограничения запроса: до 12 файлов, 256 КБ / 6000 строк на файл, 1 МБ исходников суммарно, 1,5 МБ тела HTTP-запроса. Два параллельных обработчика; 18 секунд на инструмент и 85 секунд на запрос. На Linux/macOS ограничиваются процессорное время и число открытых файлов. Размер временных данных на основной системе не ограничен; для недоверенного кода используй контейнер с ограниченным tmpfs. На POSIX при превышении времени завершается группа процессов. Эквивалентной изоляции дерева процессов на Windows здесь нет.
+- Приложение слушает петлевой адрес, принимает обращения к localhost/127.0.0.1, отклоняет POST с другого источника и не включает CORS. **Авторизации нет.** Не открывай его в интернет или общую локальную сеть.
+- Интерфейс хранит исходники в памяти, а не в localStorage. Сохраняется только выбранная тема. Полные исходники в отчёты не включаются, но сообщения диагностики могут цитировать их фрагменты. Считай отчёты потенциально конфиденциальными.
+- Временные папки исходников удаляются после анализа. Кэши SDK и инструментов могут оставаться. CodeScope не добавляет телеметрию; внешние инструменты имеют собственные правила. Если Node.js отсутствует, Pyright может потребоваться однократная загрузка среды. Установи Node.js заранее для предсказуемой работы без сети.
+- Компиляторы и синтаксические анализаторы — сложные нативные программы, в которых могут быть уязвимости. Подключаемые файлы могут читать доступные данные основной системы; диагностика может раскрывать сведения об окружении. **Не проверяй недоверенный код непосредственно на своей основной системе.**
 
-## Recommended container boundary
+## Рекомендуемая изоляция контейнера
 
-Build the full-toolchain image, then run without host mounts or network:
+Собери образ со всеми инструментами и запускай без подключения каталогов основной системы:
 
 ```sh
 docker build -t codescope:1.0.0 .
 docker run --rm -p 127.0.0.1:8765:8765 --network bridge \
   --memory 2g --cpus 2 --pids-limit 128 --cap-drop ALL \
   --security-opt no-new-privileges --read-only \
-  --tmpfs /tmp:rw,nosuid,nodev,size=512m codescope:1.0.0
+  --tmpfs /tmp:rw,nosuid,nodev,size=512m,mode=1777 codescope:1.0.0
 ```
 
-The loopback port mapping requires networking; the default bridge **still allows outbound traffic**. For hostile code, use a dedicated VM or isolated host and deny container egress at the firewall. `--network none` prevents browser access to this server, so it is not a substitute in the command above. Do not mount personal directories or secrets. A container reduces risk but does not prove isolation.
+Для доступа браузера к порту нужна сеть; стандартная сеть bridge **разрешает исходящие подключения**. Для потенциально вредоносного кода используй отдельную виртуальную машину или изолированную систему и блокируй исходящий трафик контейнера межсетевым экраном. `--network none` исключает доступ браузера к этому серверу и не является заменой в приведённой команде. Не подключай личные папки и секреты. Контейнер уменьшает риск, но не гарантирует изоляцию.
 
-Report vulnerabilities privately using the maintainer contact options in the GitHub profile; do not publish live credentials in an issue. No private reporting channel has been configured by this repository automatically.
+Сообщай об уязвимостях конфиденциально через контакты автора в профиле GitHub; не публикуй действующие ключи в обсуждениях. Специальный закрытый канал при создании репозитория автоматически не настраивался.
