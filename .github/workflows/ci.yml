@@ -1,0 +1,89 @@
+name: CI & Release
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.10', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: sudo apt-get update && sudo apt-get install -y cppcheck g++
+      - run: python -m pip install -r requirements-lock.txt && python -m pip install --no-deps .
+      - run: python -m pytest -q
+      - run: ruff check codescope tests
+  container:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t codescope:ci .
+      - name: Verify all languages inside the non-root container
+        run: docker run --rm --network none --memory 2g --cpus 2 --pids-limit 128 --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,nosuid,nodev,size=512m --entrypoint python codescope:ci -m pytest -q -p no:cacheprovider
+  release:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [test, container]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: sudo apt-get update && sudo apt-get install -y cppcheck g++
+      - run: python -m pip install -r requirements-lock.txt && python -m pip install --no-deps .
+      - run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - name: Browser checks and screenshots
+        run: |
+          codescope serve > /tmp/codescope.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          for n in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/api/health && break || sleep 1; done
+          node scripts/ui-smoke.mjs
+      - name: Package and publish version if new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(python -c 'from codescope import __version__; print(__version__)')
+          git archive --format=zip --prefix="codescope-$VERSION/" -o "codescope-$VERSION.zip" HEAD
+          sha256sum "codescope-$VERSION.zip" > SHA256SUMS.txt
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "Release v$VERSION already exists; immutable assets left unchanged."
+          else
+            gh release create "v$VERSION" "codescope-$VERSION.zip" SHA256SUMS.txt reports/interface-desktop.png reports/interface-mobile.png reports/interface-dark.png reports/example-report.html --target "$GITHUB_SHA" --title "CodeScope v$VERSION" --notes-file docs/release-notes.md
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-checks
+          path: reports/
