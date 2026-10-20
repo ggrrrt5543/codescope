@@ -78,7 +78,7 @@ class Analyzer:
                 err = stderr.read(2_000_000).decode("utf-8", errors="replace")
             self.last_returncode = process.returncode
             status = "completed" if process.returncode in accepted else "failed"
-            detail = "" if status == "completed" else (err or out or f"Process exited with code {process.returncode}")[-1200:].replace(str(self.root), "<workspace>")
+            detail = "" if status == "completed" else (err or out or f"Процесс завершился с кодом {process.returncode}")[-1200:].replace(str(self.root), "<workspace>")
             self.tools.append(ToolRun(name=name, status=status, detail=detail))
             return (out, err) if status == "completed" else None
         except OSError as exc:
